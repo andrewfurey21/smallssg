@@ -43,12 +43,16 @@ def createPublicDirectory
   index = File.readlines("../index.html")
   outputDir = "../"+DIR_NAME
   inputDir = "../"+MD_DIR
+  # if not Dir.exist?(outputDir)
+  #   Dir.mkdir(outputDir) #TODO: fix if public is already there
+  # end
+  Dir.mkdir(outputDir)
 
-  outputFile = File.new(DIR_NAME+"index.html", "w")
+  puts outputDir+"/index.html"
+  outputFile = File.new(outputDir+"/index.html", "w")
   outputFile.puts(index)
   outputFile.close()
 
-  Dir.mkdir(outputDir)
   Dir.foreach(inputDir) do |fileName|
     next if fileName == "." || fileName == ".."
     generateHTML(inputDir+"/"+fileName, outputDir)
