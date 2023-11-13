@@ -12,6 +12,7 @@ END_OF_STRING
 
 DIR_NAME = "public"
 MD_DIR = "markdown"
+STYLES_DIR = "styles"
 
 def generateHTML(pathName, outputDir)
   path = Pathname.new(pathName)
@@ -47,6 +48,10 @@ def createPublicDirectory
   #   Dir.mkdir(outputDir) #TODO: fix if public is already there
   # end
   Dir.mkdir(outputDir)
+
+  sass = File.readlines("../"+STYLES_DIR+"/main.scss").join('')
+  css  = SassC::Engine.new(sass, style: :compressed).renderS
+  puts css
 
   puts outputDir+"/index.html"
   outputFile = File.new(outputDir+"/index.html", "w")
