@@ -1,5 +1,6 @@
 require 'redcarpet'
 require 'pathname'
+require 'sassc'
 
 HEADER = <<END_OF_STRING
 <head>
