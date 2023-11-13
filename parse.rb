@@ -52,9 +52,10 @@ def createPublicDirectory
 
   sass = File.readlines("../"+STYLES_DIR+"/main.scss").join('')
   css  = SassC::Engine.new(sass, style: :compressed).render
-  puts css
+  cssOutput = File.new(outputDir+"/main.css", "w")
+  cssOutput.puts(css)
+  cssOutput.close()
 
-  puts outputDir+"/index.html"
   outputFile = File.new(outputDir+"/index.html", "w")
   outputFile.puts(index)
   outputFile.close()
