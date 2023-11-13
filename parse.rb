@@ -1,7 +1,19 @@
 require 'redcarpet'
 require 'pathname'
 
-def generateHTML(pathName)
+HEADER = <<END_OF_STRING
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Andrew's Blog</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+END_OF_STRING
+
+DIR_NAME = "public"
+MD_DIR = "markdown"
+
+def generateHTML(pathName, outputDir)
   path = Pathname.new(pathName)
   fileName = ""
   if path.file?
@@ -11,13 +23,37 @@ def generateHTML(pathName)
     puts "This is not a file, moron."
   end
   file = File.readlines(path)
-
   renderer = Redcarpet::Render::HTML.new(hard_wrap: true)
   markdown = Redcarpet::Markdown.new(renderer, extensions={})
 
   html = markdown.render(file.join(''))
+  html = "<body>" + html + "</body>"
+  html = HEADER + html
+  html = "<html>" + html + "</html>"
 
-  outputFile = File.new(fileName, "w")
+  outputFile = File.new(outputDir+"/"+fileName, "w")
   outputFile.puts(html)
   outputFile.close()
+
+  return html
 end
+
+# Creates public directory outside of submodule
+def createPublicDirectory
+  index = File.readlines("../index.html")
+  outputDir = "../"+DIR_NAME
+  inputDir = "../"+MD_DIR
+
+  outputFile = File.new(DIR_NAME+"index.html", "w")
+  outputFile.puts(index)
+  outputFile.close()
+
+  Dir.mkdir(outputDir)
+  Dir.foreach(inputDir) do |fileName|
+    next if fileName == "." || fileName == ".."
+    generateHTML(inputDir+"/"+fileName, outputDir)
+  end
+
+end
+
+createPublicDirectory
