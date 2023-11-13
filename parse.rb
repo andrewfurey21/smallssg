@@ -51,7 +51,7 @@ def createPublicDirectory
   Dir.mkdir(outputDir)
 
   sass = File.readlines("../"+STYLES_DIR+"/main.scss").join('')
-  css  = SassC::Engine.new(sass, style: :compressed).renderS
+  css  = SassC::Engine.new(sass, style: :compressed).render
   puts css
 
   puts outputDir+"/index.html"
