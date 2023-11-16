@@ -1,6 +1,7 @@
 require 'redcarpet'
 require 'pathname'
 require 'sassc'
+require 'json'
 
 HEADER = <<END_OF_STRING
 <head>
@@ -14,6 +15,12 @@ END_OF_STRING
 DIR_NAME = "public"
 MD_DIR = "posts"
 STYLES_DIR = "styles"
+
+META_DATA_NAME = "data.json"
+META_TITLE = "title"
+META_DATE = "date"
+META_TAG = "tag"
+META_READY = "ready"
 
 def generateHTML(pathName, outputDir)
   path = Pathname.new(pathName)
@@ -32,6 +39,7 @@ def generateHTML(pathName, outputDir)
   html = "<body>" + html + "</body>"
   html = HEADER + html
   html = "<html>" + html + "</html>"
+  html = "<!DOCTYPE html>" + html
 
   outputFile = File.new(outputDir+"/"+fileName, "w")
   outputFile.puts(html)
@@ -78,4 +86,9 @@ def compileSassDirectory
   end
 end
 
-createPublicDirectory
+def readMetaData(postDir)
+  file = File.readlines("../"+postDir+"/"+META_DATA_NAME)
+  return JSON.parse(file)
+end
+
+updatePublicDirectory
