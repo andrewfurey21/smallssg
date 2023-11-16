@@ -6,4 +6,5 @@ A small static site generator.
 
 - redcarpet 
 - sassc
+- json
 

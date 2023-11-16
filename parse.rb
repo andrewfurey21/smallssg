@@ -32,6 +32,7 @@ def generateHTML(pathName, outputDir)
   html = "<body>" + html + "</body>"
   html = HEADER + html
   html = "<html>" + html + "</html>"
+  html = "<!DOCTYPE html>" + html
 
   outputFile = File.new(outputDir+"/"+fileName, "w")
   outputFile.puts(html)
