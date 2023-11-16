@@ -2,9 +2,11 @@
 
 A small static site generator.
 
-### Install
+## To Do:
 
-- redcarpet 
-- sassc
-- json
+- properly make main page
+- proper styling
+- each markdown file in a folder, along with json file for meta data
+- do code blocks
+- tests with rake
 
