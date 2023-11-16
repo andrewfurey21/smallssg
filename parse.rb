@@ -12,7 +12,7 @@ HEADER = <<END_OF_STRING
 END_OF_STRING
 
 DIR_NAME = "public"
-MD_DIR = "markdown"
+MD_DIR = "posts"
 STYLES_DIR = "styles"
 
 def generateHTML(pathName, outputDir)
@@ -65,6 +65,17 @@ def createPublicDirectory
     generateHTML(inputDir+"/"+fileName, outputDir)
   end
 
+end
+
+def compileSassDirectory
+  outputDir = "../"+DIR_NAME
+  Dir.forEach("../"+STYLE_DIR) do |fileName|
+    sass = File.readlines("../"+STYLES_DIR+"/"+ fileName + ".scss").join('')
+    css  = SassC::Engine.new(sass, style: :compressed).render
+    cssOutput = File.new(outputDir+"/"+fileName+".css", "w")
+    cssOutput.puts(css)
+    cssOutput.close()
+  end
 end
 
 createPublicDirectory
