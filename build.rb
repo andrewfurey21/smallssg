@@ -2,6 +2,7 @@ require 'redcarpet'
 require 'pathname'
 require 'sassc'
 require 'json'
+require 'set'
 
 SITE_CONFIG = "site_config.json"
 CONFIG = "config.json"
@@ -71,13 +72,14 @@ end
 
 
 class SiteConfig
-  attr_reader :outputDir, :inputDir, :stylesFile
+  attr_reader :outputDir, :inputDir, :stylesFile, :currentlyBuilt
   def initialize(file)
     data = File.read(file)
     json = JSON.parse(data)
     @outputDir = json["output_dir"]
     @inputDir = json["input_dir"]
     @stylesFile = json["styles_file"]
+    @currentlyBuilt = Set.new
   end
 end
 
@@ -97,6 +99,7 @@ class Config
 end
 
 class Post
+  attr_reader :config
   def initialize(dir)
     @config = Config.new(dir+CONFIG)
     @markdown_path = dir + @config.file
@@ -123,7 +126,9 @@ class Post
 
   def output(siteConfig)
     if @config.publish
-      puts @html
+      return @html
+    else
+      return ""
     end
   end
 end
@@ -139,18 +144,35 @@ if __FILE__ == $0
   Dir.foreach(siteConfig.outputDir) do |fileName|
     next if fileName == "." or fileName == ".."
     if not File.directory?(fileName)
-      puts fileName
       File.delete(siteConfig.outputDir + fileName)
     end
   end
+
   # output styles files
   sass = File.read(siteConfig.stylesFile)
   css  = SassC::Engine.new(sass, style: :compressed).render
-  stylesName = siteConfig.outputDir + stylesFileName(siteConfig)+".css"
+  stylesName = siteConfig.outputDir + stylesFileName(siteConfig) + ".css"
   styleFile = File.open(stylesName, "w")
   styleFile.puts(css)
   styleFile.close()
-  # output html files
+
+  # check for duplicate output files and output html files
+  Dir.foreach(siteConfig.inputDir) do |postDir|
+    next if postDir == "." or postDir == ".."
+    fullDir = siteConfig.inputDir + postDir + "/"
+    post = Post.new(fullDir)
+    post.compile(siteConfig)
+    output = post.output(siteConfig)
+    if output != ""
+      outputFileName = siteConfig.outputDir + post.config.title.split(" ").join("_") + ".html"
+      if siteConfig.currentlyBuilt.add?(outputFileName) == nil
+        puts "Found duplicate file name: \"#{outputFileName}\". Writing over last file."
+      end
+      outputFile = File.open(outputFileName, "w")
+      outputFile.puts(output)
+      outputFile.close()
+    end
+  end
   # put in correct index.html
 end
 
