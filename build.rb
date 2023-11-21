@@ -83,24 +83,27 @@ def compileSassDirectory
 end
 
 class SiteConfig
+  attr_reader :show_contents, :output_dir, :input_dir, :styles_file
   def initialize(file)
     data = File.read(file)
     json = JSON.parse(data)
     @show_contents = json["show_contents"]
     @output_dir = json["output_dir"]
     @input_dir = json["input_dir"]
-    @styles_dir = json["styles_dir"]
+    @styles_file = json["styles_file"]
   end
 end
 
 class Config
+  TAG_DELIMITER = ", "
+  attr_reader :title, :date, :publish, :tags, :file
   def initialize(file)
     data = File.read(file)
     json = JSON.parse(data)
     @title = json["title"]
-    @data = json["data"]
+    @date = json["date"]
     @publish = json["publish"]
-    @tags = json["tags"].split(" ")
+    @tags = json["tags"].split(TAG_DELIMITER)
     @file = json["file"]
   end
 end
@@ -113,10 +116,23 @@ class Post
     @markdown_renderer = Redcarpet::Markdown.new(renderer)
   end
 
-  def compile
+  def compile(siteConfig)
+    title = "<title>#{@config.title}</title>"
+    styles_path = Pathname.new(siteConfig.styles_file)
+    styles = "<link rel=\"stylesheet\" href=\"#{styles_path.basename.to_s}.css\">"
     markdown = File.read(@markdown_path)
-    @html = markdown_renderer.render(markdown)
+    @html = @markdown_renderer.render(markdown)
+  end
+
+  def output
+    if @config.publish
+      puts @html
+    end
   end
 end
 
+siteConfig = SiteConfig.new(SITE_CONFIG)
+post = Post.new("posts/post1/")
+post.compile(siteConfig)
+post.output
 # updatePublicDirectory
