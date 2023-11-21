@@ -16,11 +16,8 @@ DIR_NAME = "public"
 MD_DIR = "posts"
 STYLES_DIR = "styles"
 
-META_DATA_NAME = "data.json"
-META_TITLE = "title"
-META_DATE = "date"
-META_TAG = "tag"
-META_READY = "ready"
+SITE_CONFIG = "site_config.json"
+CONFIG = "config.json"
 
 def generateHTML(pathName, outputDir)
   path = Pathname.new(pathName)
@@ -85,9 +82,41 @@ def compileSassDirectory
   end
 end
 
-def readMetaData(postDir)
-  file = File.readlines("../"+postDir+"/"+META_DATA_NAME)
-  return JSON.parse(file)
+class SiteConfig
+  def initialize(file)
+    data = File.read(file)
+    json = JSON.parse(data)
+    @show_contents = json["show_contents"]
+    @output_dir = json["output_dir"]
+    @input_dir = json["input_dir"]
+    @styles_dir = json["styles_dir"]
+  end
 end
 
-updatePublicDirectory
+class Config
+  def initialize(file)
+    data = File.read(file)
+    json = JSON.parse(data)
+    @title = json["title"]
+    @data = json["data"]
+    @publish = json["publish"]
+    @tags = json["tags"].split(" ")
+    @file = json["file"]
+  end
+end
+
+class Post
+  def initialize(dir)
+    @config = Config.new(dir+CONFIG)
+    @markdown_path = dir + @config.file
+    renderer = Redcarpet::Render::HTML.new(hard_wrap: true)
+    @markdown_renderer = Redcarpet::Markdown.new(renderer)
+  end
+
+  def compile
+    markdown = File.read(@markdown_path)
+    @html = markdown_renderer.render(markdown)
+  end
+end
+
+# updatePublicDirectory
