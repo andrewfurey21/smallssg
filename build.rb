@@ -7,72 +7,8 @@ require 'set'
 SITE_CONFIG = "site_config.json"
 CONFIG = "config.json"
 
-def generateHTML(pathName, outputDir)
-  path = Pathname.new(pathName)
-  fileName = ""
-  if path.file?
-    fileName = (path.basename).to_s.split(".").first + ".html"
-    puts "Output file name: " + fileName
-  else
-    puts "This is not a file, moron."
-  end
-  file = File.readlines(path)
-  renderer = Redcarpet::Render::HTML.new(hard_wrap: true)
-  markdown = Redcarpet::Markdown.new(renderer, extensions={})
-
-  html = markdown.render(file.join(''))
-  html = "<body>" + html + "</body>"
-  html = HEADER + html
-  html = "<html>" + html + "</html>"
-  html = "<!DOCTYPE html>" + html
-
-  outputFile = File.new(outputDir+"/"+fileName, "w")
-  outputFile.puts(html)
-  outputFile.close()
-
-  return html
-end
-
-# Creates public directory outside of submodule
-# TODO: update to fix up files, not reset the whole thing (for version control)
-def updatePublicDirectory
-  outputDir = "../"+DIR_NAME
-  inputDir = "../"+MD_DIR
-  Dir.mkdir(outputDir)
-
-  sass = File.readlines("../"+STYLES_DIR+"/main.scss").join('')
-  css  = SassC::Engine.new(sass, style: :compressed).render
-  cssOutput = File.new(outputDir+"/main.css", "w")
-  cssOutput.puts(css)
-  cssOutput.close()
-
-  index = File.readlines("../index.html")
-  outputFile = File.new(outputDir+"/index.html", "w")
-  outputFile.puts(index)
-  outputFile.close()
-
-  Dir.foreach(inputDir) do |fileName|
-    next if fileName == "." || fileName == ".."
-    generateHTML(inputDir+"/"+fileName, outputDir)
-  end
-
-end
-
-def compileSassDirectory
-  outputDir = "../"+DIR_NAME
-  Dir.forEach("../"+STYLE_DIR) do |fileName|
-    # why adding .scss?
-    sass = File.readlines("../"+STYLES_DIR+"/"+ fileName + ".scss").join('')
-    css  = SassC::Engine.new(sass, style: :compressed).render
-    cssOutput = File.new(outputDir+"/"+fileName+".css", "w")
-    cssOutput.puts(css)
-    cssOutput.close()
-  end
-end
-
-
 class SiteConfig
-  attr_reader :outputDir, :inputDir, :stylesFile, :currentlyBuilt, :mainPage
+  attr_reader :outputDir, :inputDir, :stylesFile, :currentlyBuilt, :mainPage, :posts
   def initialize(file)
     data = File.read(file)
     json = JSON.parse(data)
@@ -81,6 +17,7 @@ class SiteConfig
     @stylesFile = json["styles_file"]
     @mainPage = json["main_page"]
     @currentlyBuilt = Set.new
+    @posts = Array.new
   end
 end
 
@@ -168,6 +105,8 @@ if __FILE__ == $0
       outputFileName = post.config.title.split(" ").join("_") + ".html"
       if siteConfig.currentlyBuilt.add?(outputFileName) == nil
         puts "Found duplicate file name: \"#{outputFileName}\". Writing over last file."
+      else
+        siteConfig.posts.push(post)
       end
       outputFile = File.open(siteConfig.outputDir + outputFileName, "w")
       outputFile.puts(output)
