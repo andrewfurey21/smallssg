@@ -72,13 +72,14 @@ end
 
 
 class SiteConfig
-  attr_reader :outputDir, :inputDir, :stylesFile, :currentlyBuilt
+  attr_reader :outputDir, :inputDir, :stylesFile, :currentlyBuilt, :mainPage
   def initialize(file)
     data = File.read(file)
     json = JSON.parse(data)
     @outputDir = json["output_dir"]
     @inputDir = json["input_dir"]
     @stylesFile = json["styles_file"]
+    @mainPage = json["main_page"]
     @currentlyBuilt = Set.new
   end
 end
@@ -164,19 +165,20 @@ if __FILE__ == $0
     post.compile(siteConfig)
     output = post.output(siteConfig)
     if output != ""
-      outputFileName = siteConfig.outputDir + post.config.title.split(" ").join("_") + ".html"
+      outputFileName = post.config.title.split(" ").join("_") + ".html"
       if siteConfig.currentlyBuilt.add?(outputFileName) == nil
         puts "Found duplicate file name: \"#{outputFileName}\". Writing over last file."
       end
-      outputFile = File.open(outputFileName, "w")
+      outputFile = File.open(siteConfig.outputDir + outputFileName, "w")
       outputFile.puts(output)
       outputFile.close()
     end
   end
-  # put in correct index.html
-end
 
-# post = Post.new("posts/post1/")
-# post.compile(siteConfig)
-# post.output
-# updatePublicDirectory
+  # put in correct index.html
+  mainPageData = File.read(siteConfig.mainPage)
+  mainPageName = siteConfig.outputDir + siteConfig.mainPage
+  mainPageFile = File.open(mainPageName, "w")
+  mainPageFile.puts(mainPageData)
+  mainPageFile.close()
+end
