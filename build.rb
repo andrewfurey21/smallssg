@@ -3,6 +3,7 @@ require 'pathname'
 require 'sassc'
 require 'json'
 require 'set'
+require 'nokogiri'
 
 SITE_CONFIG = "site_config.json"
 CONFIG = "config.json"
@@ -37,7 +38,7 @@ class Config
 end
 
 class Post
-  attr_reader :config
+  attr_reader :config, :wordCount
   def initialize(dir)
     @config = Config.new(dir+CONFIG)
     @markdown_path = dir + @config.file
@@ -105,20 +106,33 @@ if __FILE__ == $0
     if output != ""
       outputFileName = post.config.title.split(" ").join("_") + ".html"
       if siteConfig.currentlyBuilt.add?(outputFileName) == nil
-        puts "Found duplicate file name: \"#{outputFileName}\". Writing over last file."
+        puts "Found duplicate file name: \"#{outputFileName}\". Ignoring file."
       else
         siteConfig.posts.push(post)
+        outputFile = File.open(siteConfig.outputDir + outputFileName, "w")
+        outputFile.puts(output)
+        outputFile.close()
       end
-      outputFile = File.open(siteConfig.outputDir + outputFileName, "w")
-      outputFile.puts(output)
-      outputFile.close()
     end
   end
 
   # put in correct index.html
   mainPageData = File.read(siteConfig.mainPage)
+  doc = Nokogiri::HTML::Document.parse(mainPageData)
+  # articles = doc.css("div.articles")
+
+  siteConfig.posts.each do |post|
+    contents = Nokogiri::HTML4::Builder.new do |doc|
+      doc.div(:class => "contents") {
+        doc.text "#{post.config.title}: Word count is #{post.wordCount}"
+      }
+    end
+    contentsDiv = contents.to_html.split("\n")[1]
+    doc.at("div.articles").add_child(contentsDiv)
+  end
+
   mainPageName = siteConfig.outputDir + siteConfig.mainPage
   mainPageFile = File.open(mainPageName, "w")
-  mainPageFile.puts(mainPageData)
+  mainPageFile.puts(doc)
   mainPageFile.close()
 end
