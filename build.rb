@@ -50,6 +50,7 @@ class Post
     styles = "<link rel=\"stylesheet\" href=\"#{styles_name}.css\"/>"
 
     markdown = File.read(@markdown_path)
+    @wordCount = markdown.split(" ").length
 
     title = "<title>#{@config.title}</title>"
     header = "<!DOCTYPE html><head>#{title}#{styles}</head>"
