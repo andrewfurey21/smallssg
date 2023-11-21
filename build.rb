@@ -82,7 +82,7 @@ if __FILE__ == $0
   # reset output directory
   Dir.foreach(siteConfig.outputDir) do |fileName|
     next if fileName == "." or fileName == ".."
-    if not File.directory?(fileName)
+    if File.file?(fileName)
       File.delete(siteConfig.outputDir + fileName)
     end
   end
