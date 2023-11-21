@@ -105,8 +105,7 @@ class Post
   end
 
   def compile(siteConfig)
-    styles_path = Pathname.new(siteConfig.stylesFile)
-    styles_name = (styles_path.basename).to_s.split(".").first
+    styles_name = stylesFileName(siteConfig)
     styles = "<link rel=\"stylesheet\" href=\"#{styles_name}.css\"/>"
 
     markdown = File.read(@markdown_path)
@@ -129,8 +128,14 @@ class Post
   end
 end
 
+def stylesFileName(siteConfig)
+    styles_path = Pathname.new(siteConfig.stylesFile)
+    return (styles_path.basename).to_s.split(".").first
+end
+
 if __FILE__ == $0
   siteConfig = SiteConfig.new(SITE_CONFIG)
+  # reset output directory
   Dir.foreach(siteConfig.outputDir) do |fileName|
     next if fileName == "." or fileName == ".."
     if not File.directory?(fileName)
@@ -139,6 +144,12 @@ if __FILE__ == $0
     end
   end
   # output styles files
+  sass = File.read(siteConfig.stylesFile)
+  css  = SassC::Engine.new(sass, style: :compressed).render
+  stylesName = siteConfig.outputDir + stylesFileName(siteConfig)+".css"
+  styleFile = File.open(stylesName, "w")
+  styleFile.puts(css)
+  styleFile.close()
   # output html files
   # put in correct index.html
 end
