@@ -3,11 +3,6 @@ require 'pathname'
 require 'sassc'
 require 'json'
 
-
-DIR_NAME = "public"
-MD_DIR = "posts"
-STYLES_DIR = "styles"
-
 SITE_CONFIG = "site_config.json"
 CONFIG = "config.json"
 
@@ -74,25 +69,26 @@ def compileSassDirectory
   end
 end
 
+
 class SiteConfig
-  attr_reader :show_contents, :output_dir, :input_dir, :styles_file
+  attr_reader :outputDir, :inputDir, :stylesFile
   def initialize(file)
     data = File.read(file)
     json = JSON.parse(data)
-    @show_contents = json["show_contents"]
-    @output_dir = json["output_dir"]
-    @input_dir = json["input_dir"]
-    @styles_file = json["styles_file"]
+    @outputDir = json["output_dir"]
+    @inputDir = json["input_dir"]
+    @stylesFile = json["styles_file"]
   end
 end
 
 class Config
   TAG_DELIMITER = ", "
-  attr_reader :title, :date, :publish, :tags, :file
+  attr_reader :title, :date, :publish, :tags, :file, :showContents
   def initialize(file)
     data = File.read(file)
     json = JSON.parse(data)
     @title = json["title"]
+    @showContents = json["show_contents"]
     @date = json["date"]
     @publish = json["publish"]
     @tags = json["tags"].split(TAG_DELIMITER)
@@ -108,28 +104,46 @@ class Post
     @markdown_renderer = Redcarpet::Markdown.new(renderer)
   end
 
-  # TODO: add list of contents
   def compile(siteConfig)
-    title = "<title>#{@config.title}</title>"
-    styles_path = Pathname.new(siteConfig.styles_file)
+    styles_path = Pathname.new(siteConfig.stylesFile)
     styles_name = (styles_path.basename).to_s.split(".").first
     styles = "<link rel=\"stylesheet\" href=\"#{styles_name}.css\"/>"
-    markdown = File.read(@markdown_path)
-    body = "<body>" + @markdown_renderer.render(markdown) + "</body>"
-    header = "<!DOCTYPE html><head>#{title}#{styles}</head>"
 
+    markdown = File.read(@markdown_path)
+
+    title = "<title>#{@config.title}</title>"
+    header = "<!DOCTYPE html><head>#{title}#{styles}</head>"
+    body = "havent added contents yet"
+    if @config.showContents
+      # TODO: add list of contents
+    else
+      body = "<body>" + @markdown_renderer.render(markdown) + "</body>"
+    end
     @html = header + body
   end
 
-  def output
+  def output(siteConfig)
     if @config.publish
       puts @html
     end
   end
 end
 
-siteConfig = SiteConfig.new(SITE_CONFIG)
-post = Post.new("posts/post1/")
-post.compile(siteConfig)
-post.output
+if __FILE__ == $0
+  siteConfig = SiteConfig.new(SITE_CONFIG)
+  Dir.foreach(siteConfig.outputDir) do |fileName|
+    next if fileName == "." or fileName == ".."
+    if not File.directory?(fileName)
+      puts fileName
+      File.delete(siteConfig.outputDir + fileName)
+    end
+  end
+  # output styles files
+  # output html files
+  # put in correct index.html
+end
+
+# post = Post.new("posts/post1/")
+# post.compile(siteConfig)
+# post.output
 # updatePublicDirectory
