@@ -49,13 +49,10 @@ def generateHTML(pathName, outputDir)
 end
 
 # Creates public directory outside of submodule
-def createPublicDirectory
-  index = File.readlines("../index.html")
+# TODO: update to fix up files, not reset the whole thing (for version control)
+def updatePublicDirectory
   outputDir = "../"+DIR_NAME
   inputDir = "../"+MD_DIR
-  # if not Dir.exist?(outputDir)
-  #   Dir.mkdir(outputDir) #TODO: fix if public is already there
-  # end
   Dir.mkdir(outputDir)
 
   sass = File.readlines("../"+STYLES_DIR+"/main.scss").join('')
@@ -64,6 +61,7 @@ def createPublicDirectory
   cssOutput.puts(css)
   cssOutput.close()
 
+  index = File.readlines("../index.html")
   outputFile = File.new(outputDir+"/index.html", "w")
   outputFile.puts(index)
   outputFile.close()
@@ -78,6 +76,7 @@ end
 def compileSassDirectory
   outputDir = "../"+DIR_NAME
   Dir.forEach("../"+STYLE_DIR) do |fileName|
+    # why adding .scss?
     sass = File.readlines("../"+STYLES_DIR+"/"+ fileName + ".scss").join('')
     css  = SassC::Engine.new(sass, style: :compressed).render
     cssOutput = File.new(outputDir+"/"+fileName+".css", "w")
