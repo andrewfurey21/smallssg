@@ -3,14 +3,6 @@ require 'pathname'
 require 'sassc'
 require 'json'
 
-HEADER = <<END_OF_STRING
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Andrew's Blog</title>
-  <link rel="stylesheet" href="main.css">
-</head>
-END_OF_STRING
 
 DIR_NAME = "public"
 MD_DIR = "posts"
@@ -116,12 +108,17 @@ class Post
     @markdown_renderer = Redcarpet::Markdown.new(renderer)
   end
 
+  # TODO: add list of contents
   def compile(siteConfig)
     title = "<title>#{@config.title}</title>"
     styles_path = Pathname.new(siteConfig.styles_file)
-    styles = "<link rel=\"stylesheet\" href=\"#{styles_path.basename.to_s}.css\">"
+    styles_name = (styles_path.basename).to_s.split(".").first
+    styles = "<link rel=\"stylesheet\" href=\"#{styles_name}.css\"/>"
     markdown = File.read(@markdown_path)
-    @html = @markdown_renderer.render(markdown)
+    body = "<body>" + @markdown_renderer.render(markdown) + "</body>"
+    header = "<!DOCTYPE html><head>#{title}#{styles}</head>"
+
+    @html = header + body
   end
 
   def output
