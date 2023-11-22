@@ -47,21 +47,18 @@ class Post
   end
 
   def compile(siteConfig)
-    styles_name = stylesFileName(siteConfig)
-    styles = "<link rel=\"stylesheet\" href=\"#{styles_name}.css\"/>"
-
     markdown = File.read(@markdown_path)
     @wordCount = markdown.split(" ").length
 
-    title = "<title>#{@config.title}</title>"
-    header = "<!DOCTYPE html><head>#{title}#{styles}</head>"
-    body = "havent added contents yet"
+    rendered_html = @markdown_renderer.render(markdown)
+    mainPageData = File.read(siteConfig.mainPage)
+    doc = Nokogiri::HTML::Document.parse(mainPageData)
+    doc.at("div.post").add_child(rendered_html)
+
     if @config.showContents
       # TODO: add list of contents
-    else
-      body = "<body>" + @markdown_renderer.render(markdown) + "</body>"
     end
-    @html = header + body
+    @html = doc.to_html
   end
 
   def output(siteConfig)
@@ -119,12 +116,17 @@ if __FILE__ == $0
   # put in correct index.html
   mainPageData = File.read(siteConfig.mainPage)
   doc = Nokogiri::HTML::Document.parse(mainPageData)
-  # articles = doc.css("div.articles")
 
   siteConfig.posts.each do |post|
     contents = Nokogiri::HTML4::Builder.new do |doc|
-      doc.div(:class => "contents") {
-        doc.text "#{post.config.title}: Word count is #{post.wordCount}"
+      doc.div(:class => "articlePost") {
+        page = post.config.title.split(" ").join("_") + ".html"
+        doc.a(:href => page) {
+          doc.span(:class => "date") {
+            doc.text "#{post.config.date} "
+          }
+          doc.text "#{post.config.title}"
+        }
       }
     end
     contentsDiv = contents.to_html.split("\n")[1]
